@@ -1,0 +1,144 @@
+/* Complete Project code of the Gold Market Price model based on the Machine 
+Learning Algoritm: Support Vector Machine */
+# Installed libraries
+install.packages("caret", dependencies=c("Depends", "Suggests"))
+install.packages("e1071",dependencies=c("Depends","Suggests"))
+library(caret)
+library(e1071)
+# Program Code for model fitting using Machine Learning Algorithm:Support Vector Machine
+# Data Preparation Code
+#Reading the dataset from the working directory
+data<-read.csv(file.choose())
+#Attach the dataset
+attach(data)
+#Type of the dataset
+mode(data)
+#Taking the datavector distinctly
+inf<-data$inf
+tb<-data$tb
+ds<-data$ds
+cpi<-data$cpi
+ce<-data$ce
+co<-data$co
+rr<-data$rr
+gp<-data$gp
+#Bind the datavector for the training of the machine 
+Train<-cbind(inf,tb,ds,cpi,ce,co,rr,gp)
+# Distinction of the machine algorithms
+# Training and Test set creation 
+# create a list of 80% of the rows in the original dataset we can use for training
+val_index <- createDataPartition(data$inf, p=0.80, list=FALSE)
+# select 20% of the data for validation
+validation_data <- data[-val_index,]
+# use the remaining 80% of data to training and testing the models
+training_data <- data[val_index,]
+#Summarizing the dataset
+# dimensions of dataset
+dim(data)
+# list types for each attribute
+sapply(data, class)
+# take a peek at the first 5 rows of the data
+head(data)
+# list the levels for the class
+levels(data$rr)
+# summarize attribute distributions
+summary(data)
+#Visualization of the data
+#Univariate plots of each variable
+#Dotplot of each variable
+#Plot of inflation rate
+plot(inf,col="blue",main="Inflation Rate Plot")
+plot(tb,col="blue",main="Treasury Bill Plot")
+plot(ds,col="blue",main="Demand Supply Plot")
+plot(cpi,col="blue",main="CPI Plot")
+plot(ce,col="blue",main="Currency exchange Rate Plot")
+plot(co,col="blue",main="crude oil Plot")
+plot(rr,col="blue",main="Repo Rate Plot")
+#Box plot of each variable
+par(mfrow=c(2,4))
+boxplot(inf,main="Inflation rate")
+boxplot(ce,main="Currency Exchange")
+boxplot(co,main="Crude Oil")
+boxplot(ds,main="Demand and Supply")
+boxplot(rr,main="Repo rate")
+boxplot(cpi,main="Consumer Price Index")
+boxplot(tb,main="Tresury bill")
+#Support Vector Model 
+fit<-svm(gp~.,data=Train)
+summary(fit)
+#Create test set
+test<-validation_data[,1:7]
+Act_test_price<-validation_data[,8]
+test_result<-predict(fit,test)
+#Parameter of the fit
+par<t(fit$coefs)
+cons<-t(fit$rho)
+#Visualization of first fit
+plot(Act_test_price,col="red",type="l",lwd=2,main="Actual vs Predicted Gold Price")
+lines(test_result,col="green",type="l",lwd=2)
+legend("topright",inset=0.05,title="Summary",legend=c("Actual_Price","Predicted_Price"),lwd=2,col=c("red","green"),lty=1:2)
+#Root Mean Square error of the fitted values
+rmse<-rmse(Act_test_price,test_result)
+#Tunneing of the parameter in SVM
+tune1_fit <- tune(svm, gp~.,data=Train,ranges = list(epsilon = seq(0,0.2,0.01), cost = 1:66))
+print(tune_fit)
+#Fitted Model after tunning
+fit1<-tuneResult$best.model
+tune1_result<-predict(fit1,test)
+#Parameter after tuning
+par2<-t(fit1$coefs)
+con2<-t(fit1$rho)
+#Visualization of tuned result
+plot(Act_test_price,col="red",type="l",lwd=2,main="Actual vs Predicted and tuned Gold Price")
+lines(test_result,col="green",type="l",lwd=2)
+lines(tune1_result,type="l",col="blue",lwd=2)
+legend("topright",inset=0.05,title="Summary",legend=c("Actual","Predicted","Tuned"),lwd=2,col=c("red", "green","blue"),lty=1:3)
+#Root Mean Square test for testin the model after tuning
+rmse1<-rmse(Act_test_price,tune1_result)
+#Normality test
+err<-test_result-validation_data[,8]
+shapiro.test(err)
+print("Non Normal")
+plot(density(err), col="blue", lwd=2,bw="")
+err<-Act_test_price-tune1_result
+shapiro.test(err)
+plot(density(err), col="blue", lwd=2,bw="")
+print("Normal")
+# Consider whole dataset as test dataset
+test<-cbind(inf,tb,ds,cpi,ce,co,rr,gp)
+Act_test_price<-data$gp
+test_result<-predict(fit,test)
+#Parameter of the fit
+par<-t(fit$coefs)
+cons<-t(fit$rho)
+#Visualization of first fit
+plot(Act_test_price,col="red",type="l",lwd=2,main="Actual vs Predicted Gold Price")
+lines(test_result,col="green",type="l",lwd=2)
+legend("topright",inset=0.05,title="Summary",legend=c("Actual_Price","Predicted_Price"),lwd=2,col=c("red","green"),lty=1:2)
+#Root Mean Square error of the fitted values
+rmse<-rmse(Act_test_price,test_result)
+#Tunneing of the parameter in SVM
+tune1_fit <- tune(svm, gp~.,data=as.data.frame(test),ranges = list(epsilon = seq(0,0.2,0.01), cost = 1:66))
+print(tune_fit)
+#Fitted Model after tunning
+fit1<-tuneResult$best.model
+tune1_result<-predict(fit1,test)
+#Parameter after tuning
+par2<-t(fit1$coefs)
+con2<-t(fit1$rho)
+#Visualization of tuned result
+plot(Act_test_price,col="red",type="l",lwd=1,main="Actual vs Predicted and tuned Gold Price")
+lines(test_result,col="green",type="l",lwd=1)
+lines(tune1_result,type="l",col="blue",lwd=1)
+legend("topright",inset=0.05,title="Summary",legend=c("Actual","Predicted","Tuned"),lwd=2,col=c("red","Green","blue"),lty=c(1,2,3))
+#Root Mean Square test for testin the model after tuning
+rmse1<-rmse(Act_test_price,tune1_result)
+#Normality test
+err<-Act_test_price-tune1_result
+shapiro.test(err)
+print("Non Normal")
+plot(density(err), col="blue", lwd=2,bw="")
+err<-Act_test_price-tune1_result
+shapiro.test(err)
+plot(density(err), col="blue", lwd=2,bw="")
+print("Normal")
