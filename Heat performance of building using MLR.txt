@@ -1,0 +1,85 @@
+#remving the previous variable
+rm(list=ls())
+#Extract the data from the drive 
+data<-read.csv(file.choose())
+data <- na.omit(data)
+
+## converting variables into vector
+x1 <- as.vector(data$X1)
+x2 <- as.vector(data$X2)
+x3 <- as.vector(data$X3)
+x4 <- as.vector(data$X4)
+x5 <- as.vector(data$X5)
+yy<- as.vector(data$Y)
+
+## fitting the linear model
+fit_model <- lm(yy ~ x1+x2+x3+x4+x5)
+summary(fit_model)
+## installing corrplot package for corr
+install.packages("corrplot")
+library(corrplot)
+## forming x matrix for checking the correlation between the variables
+x <- cbind(x1,x2,x3,x4,x5)
+maa <- data.frame(x1,x2,x3,x4,x5)
+## checking correlation between variables and response variable
+corrplot(cor(cbind(yy,maa)),method="number")
+## installing car package for VIF
+install.packages("car")
+library(car)
+## checking Variance Inflation Factor 
+vif(fit)
+## installing package for variance decomposition
+install.packages("perturb")
+library(perturb)
+## checking variance decomposition
+colldiag(fit)
+## we got x2 has high indices so drop x2 and then fit model excluding x2
+fit1_model <- lm(yy~ x1+x3+x4+x5)
+summary(fit1_model)## we observe that adj r sq= .9112
+## stage 2 checking vif 
+vif(fit1_model)
+## Checking vdm at stage 2
+colldiag(fit1_model)## dropping x4 then fitting fit 2
+fit2_model <- lm(yy~x1+x3+x5)
+summary(fit2_model)##  obs r sq=.8116
+## we fit another model fit 3 to get high r sq.
+fit3_model <- lm(yy~x3+x4+x5)
+summary(fit3_model)## r sq=.9091
+## again checking vif 
+vif(fit3_model)## we observed that vif are less than 5 so no dropping of variable now.
+
+## now checking for heteroscedasticity
+plot(fit3_model)
+res <- residuals(fit3_model)
+f <- fitted(fit3_model)
+cor(res,f)
+plot(res,f)
+##errors are random since correlation b/w res and f is approximately zero
+
+## cheecking normality 
+shapiro.test(res)
+ ## p value is less than 0.05 hence not normal
+## using box cox for transformation
+install.packages("psych")
+library(caret)
+bc=BoxCoxTrans(final_data$y)
+library(psych)
+y2<-geometric.mean(y)
+y3 <- ((y^0.2)-1)/0.2
+fit6_model <- lm(y3~x3+x4+x5)
+## observing qq plot before and after transformation errors are asym. normal
+## Lack Of fit
+install.packages("alr3")
+library(alr3)
+pureErrorAnova
+## Variable Selection..... Akaike Information criteria
+install.packages("MASS")
+library(MASS)
+step(fit6,direction="both")
+## AICC
+install.packages("AICcmodavg")
+library(AICcmodavg)
+AICc(fit6)
+## prediction
+predict(fit6)
+
