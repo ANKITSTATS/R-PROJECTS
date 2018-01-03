@@ -1,0 +1,96 @@
+##Removing the existing objects  
+rm(list=ls())  
+##install packages for the calculation
+##Package for Correlation ploting   
+install.packages("corrplot")  
+library(corrplot)  
+##Package for heteroscedasticity  
+install.packages("car")  
+library(car)  
+install.packages("perturb")  
+library(perturb)  
+install.packages("alr3")  
+library(alr3)  
+install.packages("alr3")  
+library(alr3)  
+install.packages("AICcmodavg") 
+library(AICcmodavg)   
+install.packages("lmtest")  
+library(lmtest)  
+##Data reading from the drive 
+data<-read.csv(file.choose(),header=T)  
+##Converting the data as vector form  
+x1 <- as.vector(data[,1])   
+x2 <- as.vector(data[,2])  
+x3 <- as.vector(data[,3])  
+x4 <- as.vector(data[,4])  
+x5 <- as.vector(data[,5])  
+x6<- as.vector(data[,6])  
+x7<-as.vector(data[,7])  
+price<-as.vector(data[,8])  
+##Removing the NA values  
+X1<-na.omit(x1)  
+X2<-na.omit(x2)  
+X3<-na.omit(x3)  
+X4<-na.omit(x4)  
+X5<-na.omit(x5)  
+X6<-na.omit(x6)  
+X7<-na.omit(x7)  
+YY<-na.omit(price)  
+##Fitting the regression model  
+f<-lm(YY~X1+X2+X3+X4+X5+X6+X7)  
+# Calculation of Variance Inflation Factor  
+vif(f) 
+ X <- cbind(X1,X2,X3,X4,X5,X6,X7)  
+maa <- data.frame(X1,X2,X3,X4,X5,X6,X7)  
+corrplot(cor(cbind(YY,maa)),method="number")  
+# Calculation of Variance decomposition Factor  
+colldiag(f)  
+##Through these command its clear that X4 will be unnecessary  
+##Removing X4 and again fit the model  
+## Fitting the model and test again   
+f<-lm(YY~X1+X2+X3+X5+X6+X7)  
+vif(f)  
+X <- cbind(X1,X2,X3,X5,X6,X7)  
+maa <- data.frame(X1,X2,X3,X5,X6,X7)  
+##Correlation plot among the variables  
+corrplot(cor(cbind(YY,maa)),method="number")  
+colldiag(f)  
+##Summary of the model  
+summary(f)  
+# Testing for significant of the variables  
+test<-summary(aov(YY~X1+X2+X3+X5+X6+X7,maa))  
+summary(lm(YY~X1+X2+X3+X5+X6+X7))  
+##The test result is, model parameter are significant  
+#Model Adequashy Test  
+#heterscadasticity test  
+#Using Graphical Approach  
+par(mfrow=c(2,2))  
+plot(f)  
+#Using Statistical Technique 
+ #Breush Pagan Test  
+lmtest::bptest(f)  
+#NCV Test  
+car::ncvTest(f)  # Breusch-Pagan test  
+##Result of this is there is no heteroscedasticity  
+##Model without removing the unnecessary field  
+y<-20103727-1639183*X1-4336154*X2+80646*X3+110474*X4-653745*X5+35468*X6+5243999*X7  
+setwd("C:/Users/STATS-365/Desktop")  
+pdf("Without_removing_variable")  
+plot(y,type="l",col="red")  
+lines(YY,type="l",col="green")  
+dev.off()  
+##Model after removing the unnecessary field  
+h<-42477243-1487591*X1-4785055*X2+78543*X3-  
+562146*X5+41247*X6+5504751*X7  
+pdf("After_removing_variable")  
+plot(h,type="l",col="red",xlab="Months",ylab="Gold_price")  
+lines(YY,type="l",col="green")  
+dev.off()  
+##Check that residual follows the Normal distribution   
+Residual<-(h-YY)  
+hist(Residual, prob=TRUE, col="grey")
+# prob=TRUE for probabilities not counts  
+lines(density(a,bw=1.809e+06), col="blue", lwd=2,bw="") 
+# add a density estimate with defaults  
+##Graph shows that it follows normal distribution
