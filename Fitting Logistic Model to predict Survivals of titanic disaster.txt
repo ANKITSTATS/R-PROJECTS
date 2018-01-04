@@ -1,0 +1,44 @@
+rm(list=ls())
+train<-read.csv(file.choose())
+attach(train)
+str(train)
+summary(train)
+which(Embarked=="")
+train1<-train[-c(62,830),]
+train2<-train1[,-11]
+head(train2)
+train3<-train2[,-4]
+male_age<-Age[which(Sex=="male")]
+female_age<-Age[which(Sex=="female")]
+medm<-median(male_age,na.rm=T)
+medf<-median(female_age,na.rm=T)
+train3$Age[which(train$Sex=="male" & is.na(train$Age))]<-medm
+train3$Age[which(train$Sex=="female" & is.na(train$Age))]<-medf
+train3[1:10,]
+train4<-train3[,-8];train4[1:10,]
+attach(train4)
+model1<-glm(Survived~PassengerId+Pclass+Sex+Age+SibSp+Parch+Fare+Embarked,data=train4,family="binomial")
+summary(model1)
+model2<-glm(Survived~Pclass+Sex+Age+SibSp+Parch+Fare,data=train4,family="binomial")
+summary(model2)
+test<-read.csv(file.choose())
+dim(test)
+attach(test)
+str(test)
+summary(test)
+which(is.na(Fare))
+test1<-test[-153,]
+test2<-test1[,-c(3,8,10)]
+head(test2)
+male_age_test<-test2$Age[which(test2$Sex=="male")]
+female_age_test<-test2$Age[which(test2$Sex=="female")]
+medm<-median(male_age_test,na.rm=T)
+medf<-median(female_age_test,na.rm=T)
+length(c(male_age_test,female_age_test))
+test2$Age[which(test2$Sex=="male" & is.na(test2$Age))]<-medm
+test2$Age[which(test2$Sex=="female" & is.na(test2$Age))]<-medf
+test2[1:10,]
+test3<-test2[,-c(1,8)]
+test_data<-as.data.frame(test3)
+predict<-predict(model2,test_data,type="response")
+Survived<-round(predict)
